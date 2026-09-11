@@ -1,5 +1,4 @@
 .env
 __pycache__/
-index/
-ci.ps1
-upload/*
+index/*
+models/*

@@ -4,7 +4,7 @@ from config import EMBED_MODEL, QUERY_INSTRUCTION
 
 _model = None
 
-
+# 向量模型，用于将文档或查询转换为向量表示，便于后续检索
 def _get_model() -> SentenceTransformer:
     """懒加载，全局只加载一次"""
     global _model

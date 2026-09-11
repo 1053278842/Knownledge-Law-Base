@@ -1,7 +1,7 @@
 import re
 
 # 匹配 "第X条"，X 是中文数字
-ARTICLE_PAT = re.compile(r'(第[一二三四五六七八九十百千零]+条)')
+ARTICLE_PAT = re.compile(r'(?:^|\n)[　\s]*(第[一二三四五六七八九十百千零]+条)')
 # 匹配 "第X章"
 CHAPTER_PAT = re.compile(r'第[一二三四五六七八九十百千零]+章\s*[^\n]*')
 
