@@ -1,6 +1,7 @@
-sentence-transformers>=2.2.0
-faiss-cpu>=1.7.4
-langchain-text-splitters>=0.0.1
-rank-bm25>=0.2.2
-jieba>=0.42.1
-numpy
+faiss==1.5.3
+jieba==0.42.1
+numpy==2.5.3
+python-dotenv==1.2.3
+rank_bm25==0.2.2
+sentence_transformers==6.0.1
+torch==2.14.0

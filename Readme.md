@@ -28,16 +28,22 @@
     ```
 
 ## 接入 DeepSeek
-通过环境变量配置密钥和模型，`demo.py` 会直接调用 DeepSeek HTTP API：
+项目根目录的 `.env` 用于保存本地敏感配置，`.env` 已加入 `.gitignore`。
+将密钥填写到 `.env`：
+
+```dotenv
+DEEPSEEK_API_KEY=你的 API Key
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+```
+
+然后运行：
 
 ```powershell
-$env:DEEPSEEK_API_KEY = "你的 API Key"
-$env:DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-$env:DEEPSEEK_MODEL = "deepseek-chat"
 python demo.py
 ```
 
-也可以手动创建客户端：
+环境变量优先级高于 `.env`，也可以手动创建客户端：
 
 ```python
 from llm_client import DeepSeekLLMClient
