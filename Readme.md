@@ -52,20 +52,44 @@ client = DeepSeekLLMClient(api_key="你的 API Key")
 ```
 
 ## 接入其他内网 AI
-实现统一的 `LLMClient.chat` 协议，然后注入 `main`：
+如果内网 AI 使用自定义请求头、请求体或响应结构，可以使用 `HttpLLMClient`：
 
 ```python
+import json
+import os
+
 from contract.review_contract import main
-from llm_client import LLMClient
+from llm_client import HttpLLMClient
 
 
-class InternalLLMClient:
-    def chat(self, messages: list[dict], *, model=None, temperature=0.0) -> str:
-        # 调用内网 AI SDK 或 HTTP 接口，返回生成的文本
-        ...
+def build_headers(messages, model, temperature):
+    return {
+        "X-API-Key": os.environ["INTERNAL_LLM_API_KEY"],
+        "X-Tenant-Id": os.environ["INTERNAL_LLM_TENANT_ID"],
+    }
 
 
-main("template.txt", InternalLLMClient())
+def build_body(messages, model, temperature):
+    return {
+        "model": model or "internal-model",
+        "input": messages,
+        "temperature": temperature,
+    }
+
+
+def parse_response(raw: str) -> str:
+    return json.loads(raw)["data"]["answer"]
+
+
+client = HttpLLMClient(
+    endpoint=os.environ["INTERNAL_LLM_ENDPOINT"],
+    header_builder=build_headers,
+    body_builder=build_body,
+    response_parser=parse_response,
+)
+main("template.txt", client)
 ```
 
-`messages` 使用通用的 `{"role": ..., "content": ...}` 格式，业务层不依赖任何厂商 SDK。
+`endpoint` 必须是完整请求地址，不会自动追加 `/chat/completions`。
+三个构造器参数按顺序接收 `messages`、`model`、`temperature`。
+业务层仍只依赖统一的 `LLMClient.chat` 协议。
