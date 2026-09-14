@@ -1,15 +1,17 @@
-import sys
-from openai import OpenAI
+from llm_client import LLMClient
 from rag.splitter import split_contract
 from contract.query_gen import gen_queries
 from contract.reviewer import review_entire_contract
 from rag.retriever import get_retriever
 
-API_KEY = "sk-58d8cc12c864406ba193619651886597"
-client = OpenAI(api_key=API_KEY, base_url="https://api.deepseek.com/v1")
 
+def main(contract_path: str, client: LLMClient):
+    """执行合同切分、逐段召回和最终综合评审。
 
-def main(contract_path: str):
+    :param contract_path: 合同文本路径
+    :param client: 内网大模型客户端
+    :return: None
+    """
     raw = open(contract_path, encoding="utf-8").read()
     clauses = split_contract(raw)
     print(f"合同共 {len(clauses)} 条\n")
@@ -58,4 +60,4 @@ def main(contract_path: str):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "template.txt")
+    raise RuntimeError("请通过 main(contract_path, client) 注入内网 LLM 客户端")

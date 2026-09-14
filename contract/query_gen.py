@@ -1,5 +1,7 @@
 import json
-from openai import OpenAI
+from typing import Optional
+
+from llm_client import LLMClient, invoke
 
 PROMPT = """你是合同审查专家。请阅读下面这条合同条款，提取出它涉及的所有法律问题。
 对每个法律问题，生成一句用于检索法条的查询。
@@ -19,14 +21,25 @@ PROMPT = """你是合同审查专家。请阅读下面这条合同条款，提�
 """
 
 
-def gen_queries(clause: str, client: OpenAI, model: str = "deepseek-flash") -> list[str]:
-    resp = client.chat.completions.create(
-        model=model,
+def gen_queries(
+    clause: str,
+    client: LLMClient,
+    model: Optional[str] = None,
+) -> list[str]:
+    """为单个合同条款生成法条检索问题。
+
+    :param clause: 合同条款正文
+    :param client: 通用大模型客户端
+    :param model: 可选的模型名称
+    :return: 0-5 个检索问题
+    """
+    text = invoke(
+        client,
         messages=[{"role": "user", "content": PROMPT.format(clause=clause)}],
+        model=model,
         temperature=0.2,
-        response_format={"type": "json_object"} if "deepseek" in model else None,
     )
-    text = resp.choices[0].message.content.strip()
+    text = text.strip()
     # 兼容各种返回格式
     try:
         data = json.loads(text)

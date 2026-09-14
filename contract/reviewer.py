@@ -1,3 +1,8 @@
+from typing import Optional
+
+from llm_client import LLMClient, invoke
+
+
 REVIEW_PROMPT = """你是资深合同律师。请审查下面这条合同条款，判断是否存在法律风险。
 
 【合同条款】
@@ -28,17 +33,22 @@ def format_articles(articles: list[dict]) -> str:
     return "\n\n".join(lines)
 
 
-def review_clause(clause: str, articles: list[dict], client, model="deepseek-chat") -> str:
+def review_clause(
+    clause: str,
+    articles: list[dict],
+    client: LLMClient,
+    model: Optional[str] = None,
+) -> str:
     prompt = REVIEW_PROMPT.format(
         clause=clause,
         articles=format_articles(articles),
     )
-    resp = client.chat.completions.create(
-        model=model,
+    return invoke(
+        client,
         messages=[{"role": "user", "content": prompt}],
+        model=model,
         temperature=0.1,
     )
-    return resp.choices[0].message.content
 
 
 CONTRACT_REVIEW_PROMPT = """你是资深合同律师。请依据下列合同条款及每段召回的关联法条，
@@ -80,13 +90,13 @@ def format_review_materials(records: list[dict]) -> str:
 
 def review_entire_contract(
     records: list[dict],
-    client,
-    model: str = "deepseek-chat",
+    client: LLMClient,
+    model: Optional[str] = None,
 ) -> str:
     """对全部有效条款进行一次综合法律评审。
 
     :param records: 已召回法条的合同条款记录
-    :param client: OpenAI 兼容客户端
+    :param client: 通用大模型客户端
     :param model: 综合评审模型
     :return: 整份合同的综合评审结果
     """
@@ -96,9 +106,9 @@ def review_entire_contract(
     prompt = CONTRACT_REVIEW_PROMPT.format(
         materials=format_review_materials(records),
     )
-    resp = client.chat.completions.create(
-        model=model,
+    return invoke(
+        client,
         messages=[{"role": "user", "content": prompt}],
+        model=model,
         temperature=0.1,
     )
-    return resp.choices[0].message.content

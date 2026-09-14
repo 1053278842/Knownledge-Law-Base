@@ -4,4 +4,3 @@ langchain-text-splitters>=0.0.1
 rank-bm25>=0.2.2
 jieba>=0.42.1
 numpy
-openai>=1.0.0

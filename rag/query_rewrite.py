@@ -1,13 +1,6 @@
-from openai import OpenAI
+from typing import Optional
 
-_client = None
-
-
-def _get_client(api_key: str, base_url: str) -> OpenAI:
-    global _client
-    if _client is None:
-        _client = OpenAI(api_key=api_key, base_url=base_url)
-    return _client
+from llm_client import LLMClient, invoke
 
 
 REWRITE_PROMPT = """你是一个查询改写助手。根据对话历史，把用户最新的问题改写成一个独立、完整、可脱离上下文理解的检索查询。
@@ -24,9 +17,8 @@ REWRITE_PROMPT = """你是一个查询改写助手。根据对话历史，把用
 def rewrite_query(
     question: str,
     history: list[dict],
-    api_key: str,
-    base_url: str = "https://api.deepseek.com/v1",
-    model: str = "deepseek-chat",
+    client: LLMClient,
+    model: Optional[str] = None,
     max_turns: int = 4,
 ) -> str:
     """
@@ -46,13 +38,18 @@ def rewrite_query(
         for m in recent
     )
 
-    client = _get_client(api_key, base_url)
-    resp = client.chat.completions.create(
+    rewritten = invoke(
+        client,
+        messages=[{
+            "role": "user",
+            "content": REWRITE_PROMPT.format(
+                history=history_text,
+                question=question,
+            ),
+        }],
         model=model,
-        messages=[{"role": "user",
-                   "content": REWRITE_PROMPT.format(history=history_text, question=question)}],
         temperature=0,
     )
-    rewritten = resp.choices[0].message.content.strip()
+    rewritten = rewritten.strip()
     print(f"[rewrite] '{question}' → '{rewritten}'")
     return rewritten
