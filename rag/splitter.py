@@ -82,3 +82,62 @@ def split_law_text(text: str, max_len: int = 800) -> list[dict]:
                 })
 
     return chunks
+
+
+# 匹配合同条款开头：第X条、一、1.、(1) 等多种形式
+CLAUSE_PATTERNS = [
+    r'^第[一二三四五六七八九十百]+条\s*[^\n]*',       # 第X条 标题
+    r'^[一二三四五六七八九十]+[、．.]\s*[^\n]*',      # 一、二、
+    r'^\d+[、．.]\d*\s*[^\n]*',                     # 1. 1.1
+    r'^（[一二三四五六七八九十\d]+）[^\n]*',          # （一）
+]
+
+
+def split_contract(text: str, max_len: int = 600) -> list[dict]:
+    """把合同切成条款单元"""
+    lines = text.split('\n')
+    clauses = []
+    buf = []
+    cur_title = ""
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        is_new = any(re.match(p, line) for p in CLAUSE_PATTERNS)
+
+        if is_new and buf:
+            body = '\n'.join(buf).strip()
+            if body:
+                # 太长再按句号切
+                if len(body) <= max_len:
+                    clauses.append({"title": cur_title, "text": body})
+                else:
+                    for sent_group in _split_long(body, max_len):
+                        clauses.append({"title": cur_title, "text": sent_group})
+            buf = []
+
+        if is_new:
+            cur_title = line
+        buf.append(line)
+
+    if buf:
+        clauses.append({"title": cur_title, "text": '\n'.join(buf).strip()})
+
+    return clauses
+
+
+def _split_long(text: str, max_len: int) -> list[str]:
+    """长条款按句号二次切分"""
+    sents = re.split(r'(?<=[。；])', text)
+    result, buf = [], ""
+    for s in sents:
+        if len(buf) + len(s) > max_len and buf:
+            result.append(buf.strip())
+            buf = s
+        else:
+            buf += s
+    if buf.strip():
+        result.append(buf.strip())
+    return result
