@@ -174,26 +174,26 @@ class HttpLLMClient:
         return content
 
 
-class DeepSeekLLMClient:
-    """通过 DeepSeek Chat Completions HTTP API 调用模型。"""
+class OpenAICompatibleChatClient:
+    """通过 OpenAI 风格的 Chat Completions 接口调用模型。"""
 
     def __init__(
         self,
+        url: str,
         api_key: str,
-        base_url: str = "https://api.deepseek.com",
-        model: str = "deepseek-chat",
+        channel: str,
         timeout: float = 60.0,
     ):
+        if not url or not url.strip():
+            raise ValueError("对话模型 URL 不能为空")
         if not api_key or not api_key.strip():
-            raise ValueError("DeepSeek API Key 不能为空")
+            raise ValueError("对话模型 API Key 不能为空")
+        if not channel or not channel.strip():
+            raise ValueError("对话模型通道名不能为空")
 
-        endpoint = base_url.rstrip("/")
-        if not endpoint.endswith("/chat/completions"):
-            endpoint = f"{endpoint}/chat/completions"
-
+        self._endpoint = url.strip()
         self._api_key = api_key.strip()
-        self._endpoint = endpoint
-        self._model = model
+        self._model = channel.strip()
         self._timeout = timeout
 
     def chat(
@@ -203,14 +203,7 @@ class DeepSeekLLMClient:
         model: Optional[str] = None,
         temperature: float = 0.0,
     ) -> str:
-        """调用 DeepSeek Chat Completions 接口。
-
-        :param messages: role/content 消息列表
-        :param model: 覆盖构造时的模型名称
-        :param temperature: 采样温度
-        :return: 模型生成的文本
-        :raises LLMRequestException: 网络请求或响应格式异常
-        """
+        """调用 OpenAI 风格 Chat Completions 接口。"""
         payload = {
             "model": model or self._model,
             "messages": messages,
@@ -233,21 +226,25 @@ class DeepSeekLLMClient:
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
             raise LLMRequestException(
-                f"DeepSeek API HTTP {exc.code}: {detail}"
+                f"Chat API HTTP {exc.code}: {detail}"
             ) from exc
         except URLError as exc:
             raise LLMRequestException(
-                f"DeepSeek API 连接失败: {exc.reason}"
+                f"Chat API 连接失败: {exc.reason}"
+            ) from exc
+        except UnicodeDecodeError as exc:
+            raise LLMRequestException(
+                "Chat API 响应不是 UTF-8 编码"
             ) from exc
 
         try:
             data = json.loads(raw)
             content = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-            raise LLMRequestException("DeepSeek API 响应格式异常") from exc
+            raise LLMRequestException("Chat API 响应格式异常") from exc
 
         if not isinstance(content, str):
-            raise LLMRequestException("DeepSeek API 未返回文本内容")
+            raise LLMRequestException("Chat API 未返回文本内容")
         return content
 
 

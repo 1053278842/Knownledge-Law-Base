@@ -1,0 +1,54 @@
+五、(OpenAI 兼容的接口)调用示例
+注意：请求体中不需要封装成包含"reqHeader"、"reqBody"的格式
+1. 文本对话模型：
+POST 请求
+URL：对应环境地址/bocai-chat/mtp(agent)/v1/chat/completions
+请求头：
+Authorization: Bearer sk-xx
+（其中 sk-xx 为 BOCAI 前端页面看到的 ChannelAPIkey 的值）
+Content-Type：application/json
+请求体（Model 为通道编码）：
+{
+"model": "llm-chat-core",
+"messages": [
+{
+"role": "user",
+"content": "你是谁"
+}
+]
+}
+2. 文本向量化模型：
+POST 请求
+URL：对应环境地址/bocai-chat/agent/v1/embeddings
+请求头：
+Authorization: Bearer sk-xx
+（其中 sk-xx 为 BOCAI 前端页面看到的 ChannelAPIkey 的值）
+Content-Type：application/json
+请求体（Model 为通道编码）：
+{
+"model": "embedding",
+"input": [
+"人工智能是计算机科学的一个分支，旨在创建能执行人类智能任务的系统。",
+"机器学习通过数据训练模型，是 AI 的核心技术之一。",
+"太阳系有八大行星，地球是其中之一。"
+]
+}
+3. 重排序模型：
+POST 请求
+URL：对应环境地址/bocai-chat/agent/v1/rerank
+请求头：
+Authorization: Bearer sk-xx
+（其中 sk-xx 为 BOCAI 前端页面看到的 ChannelAPIkey 的值）
+Content-Type：application/json
+请求体（Model 为通道编码）：
+{
+"model": "rerank",
+"query": "什么是人工智能？",
+"documents": [
+"人工智能是计算机科学的一个分支，旨在创建能执行人类智能任务的系统。",
+8
+"机器学习通过数据训练模型，是 AI 的核心技术之一。",
+"太阳系有八大行星，地球是其中之一。"
+],
+"top_n": 3
+}
